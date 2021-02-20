@@ -1,0 +1,70 @@
+beacon:
+  min_occur: 6
+  min_interval: 5
+  min_percent: 90
+  window: 2
+  threads: 4
+  period: 24
+
+elasticsearch:
+  hosts:
+    - elasticsearch01
+    - elasticsearch02
+    - elasticsearch03
+    - elasticsearch04
+    - elasticsearch05
+  config:
+    http_auth: "elastic:HelloWorld"
+    use_ssl: True
+    verify_certs: True
+    ca_certs: "ca.crt"
+    timeout: 60
+  index: "ecs-siem-event-suricata-flow-*"
+  query:
+    must:
+    must_not:
+  source:
+    includes:
+      - "@timestamp"
+      - "source.ip"
+      - "destination.ip"
+      - "destination.port"
+    excludes: []
+
+kibana:
+  enable: true
+  url: "https://127.0.0.1:5601"
+  index_pattern_id: "4353cc80-353b-11eb-949c-7f3617dfe727"
+  discover_url: "/app/discover#/?_g={global_state}&_a={app_state}"
+  headers:
+    Content-Type: application/json
+    kbn-xsrf: "True"
+    Authorization: "Basic SGVsbG9Xb3JsZA=="
+
+datetime:
+  format: false
+
+alias:
+  "@timestamp":
+    alias: timestamp
+  "source.ip":
+    alias: src_ip
+    type: [beacon, output]
+  "destination.ip":
+    alias: dest_ip
+    type: [beacon, output]
+  "destination.port":
+    alias: dest_port
+    type: [beacon, output]
+
+notification:
+  slack:
+    enable: false
+    webhook: https://hooks.slack.com/services/HelloWorld
+
+storage:
+  elastic:
+    enable: true
+  local:
+    enable: true
+    path: 'beacon_flow.json'

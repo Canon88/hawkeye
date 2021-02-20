@@ -1,0 +1,76 @@
+beacon:
+  min_occur: 6
+  min_interval: 5
+  min_percent: 90
+  window: 2
+  threads: 4
+  period: 24
+
+elasticsearch:
+  hosts:
+    - elasticsearch01
+    - elasticsearch02
+    - elasticsearch03
+    - elasticsearch04
+    - elasticsearch05
+  config:
+    http_auth: "elastic:HelloWorld"
+    use_ssl: True
+    verify_certs: True
+    ca_certs: "ca.crt"
+    timeout: 60
+  index: "ecs-siem-event-suricata-http-*"
+  query:
+    must:
+      - term:
+          source.ip: "192.168.199.4"
+    must_not:
+  source:
+    includes:
+      - "@timestamp"
+      - "source.ip"
+      - "destination.ip"
+      - "destination.port"
+      - "url.domain"
+    excludes: []
+
+kibana:
+  enable: true
+  url: "https://127.0.0.1:5601"
+  index_pattern_id: "4353cc80-353b-11eb-949c-7f3617dfe727"
+  discover_url: "/app/discover#/?_g={global_state}&_a={app_state}"
+  headers:
+    Content-Type: application/json
+    kbn-xsrf: "True"
+    Authorization: "Basic SGVsbG9Xb3JsZA=="
+
+datetime:
+  format: false
+
+alias:
+  "@timestamp":
+    alias: timestamp
+  "source.ip":
+    alias: src_ip
+    type: [beacon, output]
+  "url.domain":
+    alias: domain
+    type: [beacon, output]
+  "destination.ip":
+    alias: dst_ip
+    type: [output]
+  "destination.port":
+    alias: dst_port
+    type: [output]
+
+notification:
+  slack:
+    enable: false
+    webhook: https://hooks.slack.com/services/HelloWorld
+
+storage:
+  elastic:
+    enable: true
+  local:
+    enable: true
+    path: 'beacon_http.json'

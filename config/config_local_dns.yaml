@@ -1,0 +1,75 @@
+beacon:
+  min_occur: 6
+  min_interval: 2
+  min_percent: 90
+  window: 2
+  threads: 4
+  period: 4
+
+elasticsearch:
+  hosts:
+    - elasticsearch01
+    - elasticsearch02
+    - elasticsearch03
+    - elasticsearch04
+    - elasticsearch05
+  config:
+    http_auth: "elastic:HelloWorld"
+    use_ssl: True
+    verify_certs: True
+    ca_certs: "ca.crt"
+    timeout: 60
+  index: "zeek-dns-2021.*"
+  query:
+    must:
+      - term:
+          rcode_name.keyword: "NOERROR"
+      - term:
+          qtype_name.keyword: "A"
+    must_not:
+  source:
+    includes:
+      - "@timestamp"
+      - id.orig_h
+      - query
+      - answers
+      - event_id
+    excludes: []
+
+kibana:
+  enable: true
+  url: "https://127.0.0.1:5601"
+  index_pattern_id: "8f2b42a0-ec2a-11ea-9250-4348ec378cc8"
+  discover_url: "/app/discover#/?_g={global_state}&_a={app_state}"
+  headers:
+    Content-Type: application/json
+    kbn-xsrf: "True"
+    Authorization: "Basic SGVsbG9Xb3JsZA=="
+
+datetime:
+  format: false
+
+alias:
+  "@timestamp":
+    alias: timestamp
+  "id.orig_h":
+    alias: src_ip
+    type: [beacon, output]
+  "query":
+    alias: hostname
+    type: [beacon, output]
+  "answers":
+    alias: answers
+    type: [output]
+
+notification:
+  slack:
+    enable: true
+    webhook: https://hooks.slack.com/services/HelloWorld
+
+storage:
+  elastic:
+    enable: true
+  local:
+    enable: true
+    path: "beacon_dns.json"
