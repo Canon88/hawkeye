@@ -1,10 +1,7 @@
 '''
 Author: Canon
 Date: 2021-01-24 13:21:39
-LastEditTime: 2021-02-20 11:39:17
-LastEditors: Please set LastEditors
-Description: In User Settings Edit
-FilePath: /Code/Jupyter/Beacon/hawkeye.py
+LastEditTime: 2021-05-24 15:51:07
 '''
 
 import os
@@ -21,10 +18,9 @@ from loguru import logger
 from config.config import Config
 from tools.kibana import Kibana
 from tools.elastic import Elastic
-from tools.notification import Slack
+from tools.notification import Slack, TheHive
 
 # TODO 新增威胁情报对接
-# TODO 新增TheHive对接
 
 
 def add_arguments():
@@ -187,7 +183,7 @@ class HawkEye():
             for key in list(d.keys()):
                 if key < self.min_interval:
                     del d[key]
-            
+
             # Finding the total number of events
             total = sum(d.values())
             if d and total > self.min_occur:
@@ -199,9 +195,10 @@ class HawkEye():
 
                     beacon_freq = list(d.keys())[0]
                     # add fields['id'] by Canon 2021.02.13
-                    event_id = work[work['delta'] == beacon_freq]['_id'].tolist()
+                    event_id = work[work['delta'] ==
+                                    beacon_freq]['_id'].tolist()
                     # add fields['occurrences'] by Canon 2021.02.13
-                    occurrences =  work[work['delta'] == beacon_freq].shape[0]
+                    occurrences = work[work['delta'] == beacon_freq].shape[0]
 
                     beacon.extend([int(percent), window, total, occurrences])
                     beacon.append(event_id)
@@ -336,17 +333,48 @@ class HawkEye():
             pass
 
         # Notification
+        msg = beacons.to_dict(orient='records')
+        ## Slack
         if notification['slack']['enable']:
+            
             webhook = notification['slack']['webhook']
             slack = Slack(webhook)
 
             text = 'New Alert'
-            msg = beacons.to_dict(orient='records')
             for i in msg:
                 t = []
                 for k, v in i.items():
                     t.append(slack.section(k, v))
                 slack.notify(text, t)
+        
+        ## Thehive
+        if notification['thehive']['enable']:
+            for i in msg:
+                url = notification['thehive']['url']
+                key = notification['thehive']['key']
+                thehive = TheHive(url, key)
+                # build artifacts
+                artifacts = {'ip': [], 'domain': []}
+                artifacts['ip'].append(i['src_ip'])
+                if i.get('dst_ip'):
+                    artifacts['ip'].append(i['dst_ip'])
+                else:
+                    artifacts['domain'].append(i['hostname'])
+                # build title
+                title = 'Beacon event detected: {} -> {}'.format(
+                    i['src_ip'], i['hostname'] if artifacts['domain'] else i['dst_ip']
+                )
+                # build alert data
+                data = {
+                    'link': i['raw_url'],
+                    'description': i,
+                    'artifacts': artifacts,
+                    'title': title,
+                    'tags': ['beacon', 'suspicious'],
+                    'type': 'external',
+                    'source': 'hawkeye'
+                }
+                thehive.notify(data)
 
         if not beacons.empty:
             msg = 'Detected {} events.'.format(beacons.shape[0])

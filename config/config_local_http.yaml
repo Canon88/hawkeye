@@ -67,6 +67,10 @@ notification:
   slack:
     enable: false
     webhook: https://hooks.slack.com/services/HelloWorld
+  thehive:
+    enable: true
+    url: http://happyhunting.icu
+    key: helloworld
 
 storage:
   elastic:

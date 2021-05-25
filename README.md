@@ -1,19 +1,10 @@
-<!--
- * @Author: your name
- * @Date: 2020-06-16 15:10:48
- * @LastEditTime: 2021-02-20 14:39:23
- * @LastEditors: Please set LastEditors
- * @Description: In User Settings Edit
- * @FilePath: /Code/Users/canon/Documents/github/hawkeye/README.md
---> 
-
 # HawkEye Beacon
 ---
-主要用于检测数据的周期性请求；
-- 支持从ElasticSearch获取数据并进行数据分析；
-- 支持ElasticSearch上任意数据的周期性分析；
-- 支持Slack告警推送；
+用于检测数据的周期性请求：
+- 支持对ElasticSearch上任意数据的周期性分析，如：DNS数据、FLOW数据等；
 - 输出日志中新增`raw_url`以及`beacon_url`链接，便于快速定位异常数据；
+- 支持Slack告警推送；
+- 支持TheHive告警推送；
 
 ```json
 {
